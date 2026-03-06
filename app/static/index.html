@@ -13,21 +13,30 @@
       }
 
       body {
-        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
         background: radial-gradient(circle at top left, #374151, #1f2937 35%, #111827 70%, #0f172a 100%);
         color: #fff;
         padding: 24px;
       }
 
-      .app {
+     .app {
         max-width: 1320px;
         margin: 0 auto;
+        height: 100vh;
         display: grid;
         grid-template-columns: 320px 1fr;
         gap: 24px;
-      }
-
-      .sidebar,
+        }
+        .sidebar {
+        height: 100%;
+        overflow-y: auto;
+        }
+        .messages {
+        flex: 1;
+        overflow-y: auto;
+        }
+            .sidebar,
       .chat-panel {
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.05);
@@ -95,7 +104,9 @@
       .send-btn,
       .attach-btn {
         cursor: pointer;
-        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: 0.2s ease;
       }
 
@@ -153,7 +164,7 @@
 
       .chat-panel {
         border-radius: 30px;
-        min-height: 760px;
+        height: 760px;
         display: flex;
         flex-direction: column;
         overflow: hidden;
