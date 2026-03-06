@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Document Chat</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Inter, Arial, sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        background: radial-gradient(circle at top left, #374151, #1f2937 35%, #111827 70%, #0f172a 100%);
+        color: #fff;
+        padding: 24px;
+      }
+
+      .app {
+        max-width: 1320px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+      }
+
+      .sidebar,
+      .chat-panel {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .sidebar {
+        border-radius: 28px;
+        padding: 22px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fde68a, #f59e0b);
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+      }
+
+      .brand h1 {
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+
+      .brand p,
+      .muted {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 13px;
+      }
+
+      .section {
+        margin-top: 18px;
+        border-radius: 22px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .section h3 {
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+
+      .upload-box {
+        border: 1px dashed rgba(34, 211, 238, 0.35);
+        background: rgba(34, 211, 238, 0.06);
+      }
+
+      .file-label,
+      .quick-btn,
+      .send-btn,
+      .attach-btn {
+        cursor: pointer;
+        border: none;
+        transition: 0.2s ease;
+      }
+
+      .file-label {
+        margin-top: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .file-label:hover,
+      .quick-btn:hover,
+      .attach-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.22);
+        font-size: 14px;
+      }
+
+      .green {
+        color: #86efac;
+      }
+
+      .quick-actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .quick-btn {
+        text-align: left;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.22);
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .chat-panel {
+        border-radius: 30px;
+        min-height: 760px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.92), rgba(15, 23, 42, 0.98));
+      }
+
+      .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 22px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .chat-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .pill-wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        font-size: 12px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .pill.success {
+        color: #86efac;
+        background: rgba(34, 197, 94, 0.08);
+        border-color: rgba(34, 197, 94, 0.18);
+      }
+
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 14px 16px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        line-height: 1.6;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .assistant {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .user {
+        align-self: flex-end;
+        background: rgba(34, 211, 238, 0.12);
+        border-color: rgba(34, 211, 238, 0.2);
+      }
+
+      .message small {
+        display: block;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+      }
+
+      .chat-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.2);
+        padding: 18px;
+      }
+
+      .input-box {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.24);
+      }
+
+      .attach-btn {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 18px;
+      }
+
+      textarea {
+        flex: 1;
+        min-height: 48px;
+        max-height: 140px;
+        resize: vertical;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: #fff;
+        padding: 12px 8px;
+        font-size: 14px;
+      }
+
+      textarea::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .send-btn {
+        padding: 13px 18px;
+        border-radius: 14px;
+        background: #ffffff;
+        color: #111827;
+        font-weight: 700;
+      }
+
+      .send-btn:hover {
+        opacity: 0.92;
+      }
+
+      .footer-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tag {
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 12px;
+      }
+
+      @media (max-width: 980px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="avatar">AI</div>
+          <div>
+            <h1>DocuMind Chat</h1>
+            <p>RAG-powered PDF assistant</p>
+          </div>
+        </div>
+
+        <div class="section upload-box">
+          <h3>Upload PDF</h3>
+          <p class="muted">Drag & drop a file or browse from your device.</p>
+          <label for="pdfFile" class="file-label">Choose PDF</label>
+          <input id="pdfFile" type="file" accept="application/pdf" />
+          <div class="status-row" style="margin-top: 12px;">
+            <span>Selected file</span>
+            <span id="selectedFile">None</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Document Status</h3>
+          <div class="status-row">
+            <span>Uploaded</span>
+            <span id="uploadStatus">Waiting</span>
+          </div>
+          <div class="status-row">
+            <span>Chunks</span>
+            <span id="chunkCount">0</span>
+          </div>
+          <div class="status-row">
+            <span>Embedding</span>
+            <span id="embedStatus">Pending</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Quick Actions</h3>
+          <div class="quick-actions">
+            <button class="quick-btn" data-prompt="Summarize the uploaded document in 5 bullet points.">Summarize PDF</button>
+            <button class="quick-btn" data-prompt="Extract the key points from the document.">Extract key points</button>
+            <button class="quick-btn" data-prompt="Create interview notes from this PDF.">Create interview notes</button>
+            <button class="quick-btn" data-prompt="Find the most important sections in the document.">Find important sections</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-title">
+            <div class="avatar">AI</div>
+            <div>
+              <h2>AI Document Chatbot</h2>
+              <p class="muted">Ask anything about your uploaded PDF</p>
+            </div>
+          </div>
+          <div class="pill-wrap">
+            <span class="pill success">Context Enabled</span>
+            <span class="pill">Gemini + Chroma</span>
+          </div>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="message assistant">
+            Hi! Upload a PDF and ask anything about it.
+            <small>Assistant</small>
+          </div>
+        </div>
+
+        <div class="chat-footer">
+          <div class="input-box">
+            <label for="pdfFile" class="attach-btn" title="Attach PDF">📎</label>
+            <textarea id="questionInput" placeholder="Ask a question about the document..."></textarea>
+            <button class="send-btn" id="sendBtn">Send</button>
+          </div>
+          <div class="footer-tags">
+            <span class="tag">Summaries</span>
+            <span class="tag">Citations</span>
+            <span class="tag">PDF Q&A</span>
+            <span class="tag">Recruiter-ready UI</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const pdfFileInput = document.getElementById("pdfFile");
+      const selectedFile = document.getElementById("selectedFile");
+      const uploadStatus = document.getElementById("uploadStatus");
+      const chunkCount = document.getElementById("chunkCount");
+      const embedStatus = document.getElementById("embedStatus");
+      const questionInput = document.getElementById("questionInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const messages = document.getElementById("messages");
+      const quickButtons = document.querySelectorAll(".quick-btn");
+
+      function addMessage(text, role) {
+        const div = document.createElement("div");
+        div.className = `message ${role}`;
+        div.innerHTML = `${text}<small>${role === "user" ? "You" : "Assistant"}</small>`;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      async function uploadPdf(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        uploadStatus.textContent = "Uploading...";
+        embedStatus.textContent = "Processing...";
+
+        try {
+          const response = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.detail || "Upload failed");
+          }
+
+          uploadStatus.textContent = "Ready";
+          uploadStatus.classList.add("green");
+          embedStatus.textContent = "Complete";
+          embedStatus.classList.add("green");
+          chunkCount.textContent = data.chunk_count ?? 0;
+
+          addMessage(`Uploaded <b>${data.filename}</b> successfully. Chunks created: <b>${data.chunk_count}</b>.`, "assistant");
+        } catch (error) {
+          uploadStatus.textContent = "Failed";
+          embedStatus.textContent = "Error";
+          addMessage(`Upload error: ${error.message}`, "assistant");
+        }
+      }
+
+      async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        addMessage(question, "user");
+        questionInput.value = "";
+
+        try {
+          const response = await fetch("/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ question }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.detail || "Chat failed");
+          }
+
+          addMessage(data.answer || "No answer returned.", "assistant");
+        } catch (error) {
+          addMessage(`Chat error: ${error.message}`, "assistant");
+        }
+      }
+
+      pdfFileInput.addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        selectedFile.textContent = file.name;
+        await uploadPdf(file);
+      });
+
+      sendBtn.addEventListener("click", sendQuestion);
+
+      questionInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          sendQuestion();
+        }
+      });
+
+      quickButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          questionInput.value = button.dataset.prompt;
+          questionInput.focus();
+        });
+      });
+    </script>
+  </body>
+</html>
